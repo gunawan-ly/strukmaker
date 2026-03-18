@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pembuat Struk Premium</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+:root{--bg-color:#f0f2f5;--receipt-width:380px}
+
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--bg-color);margin:0;padding:20px;display:flex;flex-direction:column;align-items:center}
+
+h2{color:#333}
+
+.container{display:flex;gap:40px;max-width:1100px;width:100%;flex-wrap:wrap;justify-content:center}
+
+.form-container{background:white;padding:25px;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,0.1);flex:1;min-width:320px}
+
+.saved-container{background:white;padding:20px;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,0.1);width:100%;max-width:1000px;margin-top:20px}
+
+.saved-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;font-size:14px}
+
+.form-group{margin-bottom:15px}
+
+label{display:block;font-weight:bold;margin-bottom:5px;font-size:14px}
+
+input{width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;box-sizing:border-box}
+
+.item-row{display:flex;gap:10px;margin-bottom:10px}
+
+button{padding:10px 20px;border:none;border-radius:4px;cursor:pointer;transition:0.2s}
+
+.btn-add{background:#28a745;color:white;margin-bottom:20px}
+.btn-generate{background:#007bff;color:white;width:100%;font-size:16px}
+.btn-save{background:#673ab7;color:white;width:100%;margin-top:10px}
+.btn-print{background:#6c757d;color:white;width:100%;margin-top:10px}
+.btn-image{background:#ff9800;color:white;width:100%;margin-top:10px}
+.btn-load{background:#2196f3;color:white;padding:5px 10px;font-size:12px}
+.btn-delete{background:#f44336;color:white;padding:5px 10px;font-size:12px}
+
+#receipt-preview{width:var(--receipt-width);background:#fff;padding:20px;box-shadow:0 0 10px rgba(0,0,0,0.1);font-family:'Source Code Pro',monospace;font-size:14px;line-height:1.4;color:#333}
+
+.receipt-header{text-align:center;margin-bottom:15px}
+.receipt-header h1{margin:0;font-size:20px;font-weight:600;text-transform:uppercase}
+.receipt-header p{margin:4px 0;font-size:13px}
+
+.dashed-line{border-top:1px dashed #333;margin:12px 0}
+
+.info-row{display:flex;margin-bottom:5px}
+.info-label{width:90px}
+
+.item-line{display:flex;justify-content:space-between;margin-bottom:4px}
+.item-name{flex-grow:1;padding-right:10px}
+
+.totals-section{margin-top:10px}
+.total-row{display:flex;justify-content:space-between;margin-bottom:4px}
+.total-bold{font-size:16px;font-weight:600;margin-top:8px}
+
+.footer{text-align:center;margin-top:30px;letter-spacing:1px}
+
+@media print{.form-container,.saved-container,.btn-add,.btn-generate,.btn-save,.btn-print,.btn-image,h2{display:none}body{background:white;padding:0}#receipt-preview{box-shadow:none;border:none;width:100%}}
+</style>
+</head>
+
+<body>
+
+<h2>Pembuat Struk Premium</h2>
+
+<div class="container">
+
+<div class="form-container">
+
+<div class="form-group">
+<label>Nama Toko / Kegiatan</label>
+<input type="text" id="storeName" value="Pembelian Keperluan Acara">
+</div>
+
+<div class="form-group">
+<label>Keterangan</label>
+<input type="text" id="storeAddr" value="Karang Taruna">
+</div>
+
+<div class="form-group">
+<label>Uang Dibawa (Tunai)</label>
+<input type="number" id="cashInput" placeholder="Contoh: 100000">
+</div>
+
+<label>Daftar Barang</label>
+
+<div id="items-input-container">
+<div class="item-row">
+<input type="text" placeholder="Nama Barang" class="inp-name" style="flex:2">
+<input type="number" placeholder="Qty" class="inp-qty" style="flex:0.6">
+<input type="number" placeholder="Harga" class="inp-price" style="flex:1">
+</div>
+</div>
+
+<button class="btn-add" onclick="addItemRow()">+ Tambah Barang</button>
+
+<button class="btn-generate" onclick="generateReceipt()">Generate Preview</button>
+<button class="btn-save" onclick="saveReceipt()">💾 Simpan Struk</button>
+<button class="btn-print" onclick="window.print()">Print / Simpan PDF</button>
+<button class="btn-image" onclick="exportImage()">Export PNG</button>
+
+</div>
+
+<div id="receipt-preview">
+
+<div class="receipt-header">
+<h1 id="outName">PEMBELIAN</h1>
+<p id="outAddr">Kegiatan</p>
+</div>
+
+<div class="dashed-line"></div>
+
+<div class="info-row">
+<span class="info-label">Tanggal</span>
+<span>: <span id="outDate"></span></span>
+</div>
+
+<div class="info-row">
+<span class="info-label">Nota</span>
+<span>: <span id="outID"></span></span>
+</div>
+
+<div class="dashed-line"></div>
+
+<div id="outItems"></div>
+
+<div class="dashed-line" style="margin-top:20px"></div>
+
+<div class="totals-section">
+
+<div class="total-row">
+<span>Total Item</span>
+<span id="outItemCount"></span>
+</div>
+
+<div class="total-row total-bold">
+<span>Total Belanja</span>
+<span id="outTotal"></span>
+</div>
+
+<div class="total-row">
+<span>Tunai</span>
+<span id="outCash"></span>
+</div>
+
+<div class="total-row total-bold">
+<span>Sisa</span>
+<span id="outSisa"></span>
+</div>
+
+</div>
+
+<div class="footer">*** TERIMA KASIH ***</div>
+
+</div>
+</div>
+
+<div class="saved-container">
+<h3>Struk Tersimpan</h3>
+<div id="savedList"></div>
+</div>
+
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+<script>
+
+function addItemRow(){
+const container=document.getElementById('items-input-container');
+const row=document.createElement('div');
+row.className='item-row';
+row.innerHTML=`
+<input type="text" placeholder="Nama Barang" class="inp-name" style="flex:2">
+<input type="number" placeholder="Qty" class="inp-qty" style="flex:0.6">
+<input type="number" placeholder="Harga" class="inp-price" style="flex:1">
+`;
+container.appendChild(row);
+}
+
+function formatNumber(num){
+return new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(num);
+}
+
+function generateInvoiceID(){
+const rand=Math.random().toString(36).substring(2,8).toUpperCase();
+const now=new Date();
+return `INV-${now.getFullYear()}${now.getMonth()+1}${now.getDate()}-${rand}`;
+}
+
+function generateReceipt(){
+
+const now=new Date();
+const dateStr=now.toLocaleDateString('id-ID');
+
+document.getElementById('outName').innerText=document.getElementById('storeName').value.toUpperCase();
+document.getElementById('outAddr').innerText=document.getElementById('storeAddr').value;
+document.getElementById('outDate').innerText=dateStr;
+
+if(!document.getElementById('outID').innerText){
+document.getElementById('outID').innerText=generateInvoiceID();
+}
+
+const names=document.getElementsByClassName('inp-name');
+const qties=document.getElementsByClassName('inp-qty');
+const prices=document.getElementsByClassName('inp-price');
+
+let subtotal=0;
+let itemCount=0;
+let html="";
+
+for(let i=0;i<names.length;i++){
+if(names[i].value!=""){
+let qty=parseInt(qties[i].value)||0;
+let price=parseInt(prices[i].value)||0;
+let total=qty*price;
+subtotal+=total;
+itemCount+=qty;
+
+html+=`<div class="item-line"><span class="item-name">${qty}x ${names[i].value}</span><span>${formatNumber(total)}</span></div>`;
+}
+}
+
+const total=subtotal;
+const cash=parseInt(document.getElementById('cashInput').value)||0;
+const sisa=cash-total;
+
+document.getElementById('outItems').innerHTML=html;
+
+document.getElementById('outItemCount').innerText=itemCount;
+document.getElementById('outTotal').innerText=formatNumber(total);
+document.getElementById('outCash').innerText=formatNumber(cash);
+document.getElementById('outSisa').innerText=formatNumber(sisa);
+}
+
+function getFormData(){
+const names=[...document.getElementsByClassName('inp-name')].map(i=>i.value);
+const qty=[...document.getElementsByClassName('inp-qty')].map(i=>i.value);
+const price=[...document.getElementsByClassName('inp-price')].map(i=>i.value);
+
+return{
+id:document.getElementById('outID').innerText||generateInvoiceID(),
+storeName:document.getElementById('storeName').value,
+storeAddr:document.getElementById('storeAddr').value,
+cash:document.getElementById('cashInput').value,
+names,qty,price
+};
+}
+
+function saveReceipt(){
+const data=getFormData();
+let receipts=JSON.parse(localStorage.getItem('receipts')||'[]');
+
+const index=receipts.findIndex(r=>r.id===data.id);
+
+if(index>-1){receipts[index]=data}else{receipts.push(data)}
+
+localStorage.setItem('receipts',JSON.stringify(receipts));
+
+loadSaved();
+alert('Struk berhasil disimpan');
+}
+
+function loadSaved(){
+const list=document.getElementById('savedList');
+list.innerHTML='';
+
+let receipts=JSON.parse(localStorage.getItem('receipts')||'[]');
+
+receipts.forEach(r=>{
+const div=document.createElement('div');
+div.className='saved-item';
+
+div.innerHTML=`
+<span>${r.id}</span>
+<div>
+<button class="btn-load" onclick="openReceipt('${r.id}')">Buka</button>
+<button class="btn-delete" onclick="deleteReceipt('${r.id}')">Hapus</button>
+</div>`;
+
+list.appendChild(div);
+});
+}
+
+function openReceipt(id){
+let receipts=JSON.parse(localStorage.getItem('receipts')||'[]');
+let r=receipts.find(x=>x.id===id);
+
+if(!r)return;
+
+const container=document.getElementById('items-input-container');
+container.innerHTML='';
+
+for(let i=0;i<r.names.length;i++){
+const row=document.createElement('div');
+row.className='item-row';
+row.innerHTML=`
+<input class="inp-name" style="flex:2" value="${r.names[i]}">
+<input class="inp-qty" style="flex:0.6" value="${r.qty[i]}">
+<input class="inp-price" style="flex:1" value="${r.price[i]}">
+`;
+container.appendChild(row);
+}
+
+document.getElementById('storeName').value=r.storeName;
+document.getElementById('storeAddr').value=r.storeAddr;
+document.getElementById('cashInput').value=r.cash;
+document.getElementById('outID').innerText=r.id;
+
+generateReceipt();
+}
+
+function deleteReceipt(id){
+let receipts=JSON.parse(localStorage.getItem('receipts')||'[]');
+receipts=receipts.filter(r=>r.id!==id);
+localStorage.setItem('receipts',JSON.stringify(receipts));
+loadSaved();
+}
+
+function exportImage(){
+html2canvas(document.getElementById('receipt-preview')).then(canvas=>{
+const link=document.createElement('a');
+link.download='struk.png';
+link.href=canvas.toDataURL();
+link.click();
+});
+}
+
+window.onload=()=>{
+generateReceipt();
+loadSaved();
+};
+
+</script>
+
+</body>
+</html>
