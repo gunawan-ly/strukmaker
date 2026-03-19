@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pencatatan Organisasi Premium</title>
+
+<!-- Tailwind CSS via CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Google Fonts: Source Code Pro untuk Struk, Inter untuk UI Utama -->
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  body { font-family: 'Inter', sans-serif; }
+  .font-mono-receipt { font-family: 'Source Code Pro', monospace; }
+
+  /* --- EFEK KERTAS STRUK --- */
+  .receipt-container {
+    filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.1));
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  /* --- ANIMASI RINGAN --- */
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-slide-down { animation: slideDown 0.2s ease-out forwards; }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+
+  /* Sembunyikan class hidden khusus untuk Toggle via JS */
+  .hidden-tab { display: none !important; }
+
+  /* --- PRINT OPTIMIZATION --- */
+  @media print{
+    .no-print { display: none !important; }
+    body { background: white !important; padding: 0 !important; margin: 0 !important; }
+    .receipt-container { filter: none; box-shadow: none; width: 100% !important; margin: 0 !important; border-radius: 0;}
+    #receipt-preview-content, #list-preview-content { padding: 0 !important; width: 100% !important; max-width: 100% !important; }
+    .org-logo { -webkit-filter: grayscale(100%); filter: grayscale(100%); } 
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+</style>
+</head>
+
+<body class="bg-gradient-to-br from-slate-50 to-slate-200 min-h-screen py-6 sm:py-10 px-3 sm:px-4 flex flex-col items-center text-slate-800">
+
+<!-- Header -->
+<div class="text-center mb-6 sm:mb-8 animate-fade-in no-print px-2">
+  <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-3">Pencatatan Organisasi</h2>
+  <p class="text-slate-600 text-xs sm:text-sm bg-white px-5 py-3 rounded-2xl shadow-sm inline-block max-w-lg border border-slate-100 leading-relaxed">
+    ✨ Aplikasi praktis untuk <b>Pembuatan Struk</b> & <b>Checklist Kebutuhan</b>.<br class="hidden sm:block">
+    Dikemas dengan desain elegan yang autentik dan mudah dibaca.
+  </p>
+</div>
+
+<!-- Navigation Tabs -->
+<div class="flex gap-2 mb-6 sm:mb-8 bg-white p-1.5 rounded-xl shadow-sm border border-slate-100 no-print animate-slide-down w-full max-w-md mx-auto">
+  <button id="btnTabReceipt" onclick="showTab('receiptPage')" class="flex-1 py-2 sm:py-2.5 rounded-lg text-sm font-semibold transition-colors duration-200">
+    🧾 Nota
+  </button>
+  <button id="btnTabList" onclick="showTab('listPage')" class="flex-1 py-2 sm:py-2.5 rounded-lg text-sm font-semibold transition-colors duration-200">
+    📋 Daftar
+  </button>
+</div>
+
+<!-- ================= STRUK / NOTA ================= -->
+<div id="receiptPage" class="w-full max-w-6xl">
+  <div class="flex flex-col lg:flex-row justify-center items-start gap-8 w-full">
+    
+    <!-- Form Area -->
+    <div class="bg-white/90 backdrop-blur-md p-4 sm:p-6 lg:p-8 rounded-2xl shadow-xl border border-white flex-1 w-full max-w-lg mx-auto no-print">
+      <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+        <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+        Editor Struk
+      </h3>
+
+      <div class="space-y-4 sm:space-y-5">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Logo Organisasi</label>
+          <input type="file" id="logoInputReceipt" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition-colors cursor-pointer">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Judul Acara</label>
+            <input type="text" id="receiptTitleInp" value="PEMBELIAN KEPERLUAN" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none text-sm font-medium text-slate-700">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Keterangan</label>
+            <input type="text" id="receiptSubtitleInp" value="Karang Taruna" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none text-sm font-medium text-slate-700">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Uang Kas (Tunai)</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 font-medium">Rp</span>
+            <input type="text" id="cashInput" placeholder="100.000" oninput="formatInputRupiah(this)" class="w-full pl-10 p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none font-medium text-slate-700">
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-100">
+          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Daftar Barang</label>
+          <!-- Wadah Input -->
+          <div id="items-input-container" class="space-y-2 mb-4">
+            <!-- JS generates rows here -->
+          </div>
+          <button onclick="addItemRow()" class="w-full py-2.5 border-2 border-dashed border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
+            <span>+</span> Tambah Barang Lain
+          </button>
+        </div>
+
+        <div class="pt-6 space-y-3">
+          <button onclick="saveToHistory('receipt')" class="w-full py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all flex justify-center items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+            <span id="btn-text-receipt">Simpan ke Arsip Database</span>
+          </button>
+          
+          <div class="flex gap-3">
+            <button onclick="window.print()" class="flex-1 py-2.5 bg-slate-600 hover:bg-slate-700 text-white font-semibold rounded-lg shadow transition-colors flex justify-center items-center gap-2 text-xs sm:text-sm">
+              🖨️ Cetak
+            </button>
+            <button onclick="exportImage('receipt-preview', 'struk.png')" class="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg shadow transition-colors flex justify-center items-center gap-2 text-xs sm:text-sm">
+              🖼️ Ekspor PNG
+            </button>
+          </div>
+          
+          <button onclick="startNew('receipt')" class="w-full py-2 text-red-500 hover:bg-red-50 font-medium rounded-lg transition-colors text-sm mt-2">
+            Kosongkan Form (Buat Baru)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview Area (Kertas Struk) -->
+    <div id="receipt-preview" class="receipt-container w-full max-w-[380px] shrink-0 relative bg-white mx-auto animate-fade-in">
+      <div id="receipt-preview-content" class="px-5 sm:px-7 py-8 font-mono-receipt text-sm text-slate-800 leading-relaxed mx-auto w-full">
+        <div class="text-center mb-6">
+          <img id="outLogoReceipt" class="max-w-[80px] max-h-[80px] object-contain mx-auto mb-3 grayscale hidden" src="" alt="Logo">
+          <h1 id="outReceiptTitle" class="text-xl font-bold uppercase tracking-wide m-0">PEMBELIAN</h1>
+          <p id="outReceiptSubtitle" class="text-xs text-slate-500 mt-1">Keterangan</p>
+        </div>
+
+        <div class="border-t border-dashed border-slate-400 my-4"></div>
+
+        <div class="flex flex-col gap-1 text-[13px] mb-2">
+          <div class="flex"><span class="w-20 font-semibold shrink-0">Tanggal</span><span class="break-all">: <span id="outDate"></span></span></div>
+          <div class="flex"><span class="w-20 font-semibold shrink-0">Ref ID</span><span class="break-all">: <span id="outID"></span></span></div>
+        </div>
+
+        <div class="border-t border-dashed border-slate-400 my-4"></div>
+
+        <!-- Items Container -->
+        <div id="outItems" class="space-y-1.5 text-[13px]"></div>
+
+        <div class="border-t border-dashed border-slate-400 my-5"></div>
+
+        <!-- Totals -->
+        <div class="space-y-1.5 text-[13px]">
+          <div class="flex justify-between text-slate-600">
+            <span>Total Item</span>
+            <span id="outItemCount">0</span>
+          </div>
+          <div class="flex justify-between font-bold text-base mt-2">
+            <span>Total Belanja</span>
+            <span id="outTotal">Rp 0</span>
+          </div>
+          <div class="flex justify-between text-slate-600 mt-1">
+            <span>Tunai / Kas</span>
+            <span id="outCash">Rp 0</span>
+          </div>
+          <div class="flex justify-between font-bold text-[15px] mt-2 pt-2 border-t border-slate-200">
+            <span>Sisa</span>
+            <span id="outSisa">Rp 0</span>
+          </div>
+        </div>
+
+        <div class="text-center mt-10 text-xs tracking-[0.15em] text-slate-500 font-bold">
+          *** TERIMA KASIH ***
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ================= DAFTAR KEBUTUHAN ================= -->
+<div id="listPage" class="w-full max-w-6xl hidden-tab">
+  <div class="flex flex-col lg:flex-row justify-center items-start gap-8 w-full">
+    
+    <!-- Form Area -->
+    <div class="bg-white/90 backdrop-blur-md p-4 sm:p-6 lg:p-8 rounded-2xl shadow-xl border border-white flex-1 w-full max-w-lg mx-auto no-print">
+      <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+        Editor Daftar Kebutuhan
+      </h3>
+
+      <div class="space-y-4 sm:space-y-5">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Logo Organisasi</label>
+          <input type="file" id="logoInputList" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors cursor-pointer">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Judul</label>
+            <input type="text" id="listTitleInp" value="DAFTAR BARANG" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none text-sm font-medium text-slate-700">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Sub Judul</label>
+            <input type="text" id="listSubtitleInp" value="Kebutuhan" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none text-sm font-medium text-slate-700">
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-100">
+          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Item Kebutuhan</label>
+          <div id="list-input-container" class="space-y-2 mb-4">
+            <!-- JS generates rows here -->
+          </div>
+          <button onclick="addListRow()" class="w-full py-2.5 border-2 border-dashed border-blue-200 text-blue-600 hover:bg-blue-50 font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
+            <span>+</span> Tambah Kebutuhan
+          </button>
+        </div>
+
+        <div class="pt-6 space-y-3">
+          <button onclick="saveToHistory('list')" class="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all flex justify-center items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+            <span id="btn-text-list">Simpan ke Arsip Database</span>
+          </button>
+
+          <div class="flex gap-3">
+            <button onclick="window.print()" class="flex-1 py-2.5 bg-slate-600 hover:bg-slate-700 text-white font-semibold rounded-lg shadow transition-colors flex justify-center items-center gap-2 text-xs sm:text-sm">
+              🖨️ Cetak
+            </button>
+            <button onclick="exportImage('list-preview', 'daftar.png')" class="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg shadow transition-colors flex justify-center items-center gap-2 text-xs sm:text-sm">
+              🖼️ Ekspor PNG
+            </button>
+          </div>
+          
+          <button onclick="startNew('list')" class="w-full py-2 text-red-500 hover:bg-red-50 font-medium rounded-lg transition-colors text-sm mt-2">
+            Kosongkan Form (Buat Baru)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview Area (Kertas Kebutuhan) -->
+    <div id="list-preview" class="receipt-container w-full max-w-[380px] shrink-0 relative bg-white mx-auto animate-fade-in">
+      <div id="list-preview-content" class="px-5 sm:px-7 py-8 font-mono-receipt text-sm text-slate-800 leading-relaxed mx-auto w-full">
+        <div class="text-center mb-6">
+           <img id="outLogoList" class="max-w-[80px] max-h-[80px] object-contain mx-auto mb-3 grayscale hidden" src="" alt="Logo">
+           <h1 id="outListTitle" class="text-xl font-bold uppercase tracking-wide m-0">DAFTAR BARANG</h1>
+           <p id="outListSubtitle" class="text-xs text-slate-500 mt-1">Kebutuhan</p>
+        </div>
+
+        <div class="border-t border-dashed border-slate-400 my-4"></div>
+
+        <!-- Items Container -->
+        <div id="listItems" class="space-y-2 text-[13px]"></div>
+
+        <div class="border-t border-dashed border-slate-400 my-5"></div>
+
+        <!-- Totals -->
+        <div class="flex justify-between font-bold text-base mt-2">
+          <span>Total Item</span>
+          <span id="listTotal">0</span>
+        </div>
+        
+        <div class="text-center mt-10 text-xs tracking-[0.15em] text-slate-500 font-bold">
+          *** TERIMA KASIH ***
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ================= RIWAYAT TERSIMPAN ================= -->
+<div class="w-full max-w-6xl mt-12 sm:mt-16 pt-8 border-t border-slate-300/50 no-print animate-fade-in">
+  <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+    <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+      <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+      Arsip & Riwayat Tersimpan
+    </h3>
+    <span class="text-xs font-semibold bg-slate-200 text-slate-600 px-3 py-1 rounded-full">IndexedDB Local</span>
+  </div>
+  
+  <div id="historyGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+    <!-- Kartu riwayat akan muncul di sini via JS -->
+  </div>
+</div>
+
+
+<!-- Script External -->
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+<script>
+// --- DATABASE WRAPPER (IndexedDB) ---
+const DB_NAME = "StrukAppDB";
+const STORE_NAME = "AppStorage";
+
+function initDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+    request.onsuccess = (event) => resolve(event.target.result);
+    request.onerror = (event) => reject(event.target.error);
+  });
+}
+
+async function setItemDB(key, value) {
+  try {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, "readwrite");
+      const store = transaction.objectStore(STORE_NAME);
+      store.put(value, key);
+      transaction.oncomplete = () => resolve(true);
+      transaction.onerror = (e) => reject(e.target.error);
+    });
+  } catch (error) {
+    console.error("IndexedDB Set Error:", error);
+  }
+}
+
+async function getItemDB(key) {
+  try {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, "readonly");
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.get(key);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = (e) => reject(e.target.error);
+    });
+  } catch (error) {
+    console.error("IndexedDB Get Error:", error);
+    return null;
+  }
+}
+
+// --- GLOBAL VARIABLES & INITIALIZATION ---
+let currentInvoiceID = "";
+let appHistory = [];
+
+window.onload = async function() {
+  appHistory = (await getItemDB('strukAppHistory')) || [];
+  await loadDraftData();
+  renderHistory();
+  setupRealtimeListeners();
+};
+
+function setupRealtimeListeners() {
+  document.getElementById('receiptPage').addEventListener('input', function(e) {
+    if(['INPUT', 'SELECT'].includes(e.target.tagName)) {
+      generateReceipt(); saveDraftData();
+    }
+  });
+
+  document.getElementById('listPage').addEventListener('change', function(e) {
+    if(e.target.type === 'checkbox') {
+      generateList(); saveDraftData();
+    }
+  });
+
+  document.getElementById('listPage').addEventListener('input', function(e) {
+    if(['INPUT', 'SELECT'].includes(e.target.tagName)) {
+      generateList(); saveDraftData();
+    }
+  });
+
+  document.getElementById('logoInputReceipt').addEventListener('change', function(e) { handleLogoUpload(e, 'outLogoReceipt'); });
+  document.getElementById('logoInputList').addEventListener('change', function(e) { handleLogoUpload(e, 'outLogoList'); });
+}
+
+function showTab(tab) {
+  document.getElementById('receiptPage').classList.add('hidden-tab');
+  document.getElementById('listPage').classList.add('hidden-tab');
+  
+  const inactiveClass = "bg-transparent text-slate-600 hover:bg-slate-100";
+  const activeClass = "bg-white text-indigo-600 shadow-sm ring-1 ring-slate-200/50";
+  
+  document.getElementById('btnTabReceipt').className = `flex-1 py-2 sm:py-2.5 rounded-lg text-sm font-semibold transition-colors duration-200 ${inactiveClass}`;
+  document.getElementById('btnTabList').className = `flex-1 py-2 sm:py-2.5 rounded-lg text-sm font-semibold transition-colors duration-200 ${inactiveClass}`;
+
+  document.getElementById(tab).classList.remove('hidden-tab');
+  
+  if(tab === 'receiptPage') {
+    document.getElementById('btnTabReceipt').className = `flex-1 py-2 sm:py-2.5 rounded-lg text-sm font-bold transition-colors duration-200 ${activeClass}`;
+  } else {
+    document.getElementById('btnTabList').className = `flex-1 py-2 sm:py-2.5 rounded-lg text-sm font-bold transition-colors duration-200 ${activeClass}`;
+  }
+}
+
+function handleLogoUpload(event, targetImgId) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = document.getElementById(targetImgId);
+      img.src = e.target.result;
+      img.classList.remove('hidden'); 
+      generateReceipt(); generateList(); saveDraftData();
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+// --- DOM GENERATION ---
+function addItemRow(nameVal = '', qtyVal = 1, priceVal = '') {
+  const container = document.getElementById('items-input-container');
+  const row = document.createElement('div');
+  row.className = 'item-row flex items-center gap-1.5 sm:gap-2 animate-slide-down w-full';
+  row.innerHTML = `
+    <input type="text" placeholder="Nama Barang" class="inp-name flex-1 min-w-[80px] p-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none text-xs sm:text-sm font-medium" value="${nameVal}">
+    <input type="number" min="1" class="inp-qty w-12 sm:w-16 p-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none text-xs sm:text-sm font-medium text-center px-1" value="${qtyVal}">
+    <input type="text" placeholder="Harga" class="inp-price w-20 sm:w-28 p-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none text-xs sm:text-sm font-medium" value="${priceVal}" oninput="formatInputRupiah(this)">
+    <button class="bg-red-50 text-red-500 hover:bg-red-500 hover:text-white p-1.5 sm:p-2 rounded-lg transition-colors border border-red-100 shadow-sm shrink-0" onclick="removeRow(this, 'receipt')" title="Hapus Baris">
+      <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </button>
+  `;
+  container.appendChild(row);
+  generateReceipt();
+}
+
+function addListRow(nameVal = '', qtyVal = 1, unitVal = 'Buah', checkedVal = false) {
+  const container = document.getElementById('list-input-container');
+  const row = document.createElement('div');
+  row.className = 'item-row flex items-center gap-1.5 sm:gap-2 animate-slide-down w-full';
+  row.innerHTML = `
+    <input type="checkbox" class="list-check w-4 h-4 sm:w-5 sm:h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer shrink-0" title="Tandai Selesai" ${checkedVal ? 'checked' : ''}>
+    <input type="text" placeholder="Nama Barang" class="list-name flex-1 min-w-[70px] p-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none text-xs sm:text-sm font-medium" value="${nameVal}">
+    <input type="number" min="1" class="list-qty w-12 sm:w-14 p-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none text-xs sm:text-sm font-medium text-center px-1" value="${qtyVal}">
+    <select class="list-unit w-16 sm:w-20 p-2 px-1 sm:px-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none text-xs sm:text-sm font-medium">
+      <option ${unitVal === 'Buah' ? 'selected' : ''}>Buah</option>
+      <option ${unitVal === 'Kg' ? 'selected' : ''}>Kg</option>
+      <option ${unitVal === 'Liter' ? 'selected' : ''}>Liter</option>
+      <option ${unitVal === 'Pack' ? 'selected' : ''}>Pack</option>
+      <option ${unitVal === 'Pcs' ? 'selected' : ''}>Pcs</option>
+      <option ${unitVal === 'Unit' ? 'selected' : ''}>Unit</option>
+    </select>
+    <button class="bg-red-50 text-red-500 hover:bg-red-500 hover:text-white p-1.5 sm:p-2 rounded-lg transition-colors border border-red-100 shadow-sm shrink-0" onclick="removeRow(this, 'list')" title="Hapus Baris">
+      <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </button>
+  `;
+  container.appendChild(row);
+  generateList();
+}
+
+function removeRow(btn, type) {
+  const container = btn.parentElement.parentElement;
+  if(container.children.length > 1) {
+    btn.parentElement.remove();
+    if(type === 'receipt') generateReceipt();
+    if(type === 'list') generateList();
+    saveDraftData();
+  } else {
+    alert("Minimal harus ada 1 baris.");
+  }
+}
+
+// --- FORMATTERS ---
+function formatNumber(num) {
+  return new Intl.NumberFormat('id-ID', {style:'currency', currency:'IDR', minimumFractionDigits:0}).format(num);
+}
+function formatInputRupiah(input) {
+  let value = input.value.replace(/[^0-9]/g, '');
+  if(value === '') { input.value = ''; return; }
+  input.value = new Intl.NumberFormat('id-ID').format(value);
+}
+function getNumber(value) { return parseInt(value.replace(/[^0-9]/g, '')) || 0; }
+function generateInvoiceID() {
+  const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+  const now = new Date();
+  return `ORG-${now.getFullYear()}${now.getMonth()+1}${now.getDate()}-${rand}`;
+}
+
+// --- GENERATORS ---
+function generateReceipt() {
+  document.getElementById('outReceiptTitle').textContent = document.getElementById('receiptTitleInp').value.toUpperCase();
+  document.getElementById('outReceiptSubtitle').textContent = document.getElementById('receiptSubtitleInp').value;
+
+  const names = document.getElementsByClassName('inp-name');
+  const qties = document.getElementsByClassName('inp-qty');
+  const prices = document.getElementsByClassName('inp-price');
+  
+  const outItems = document.getElementById('outItems');
+  outItems.innerHTML = ""; 
+
+  let subtotal = 0; let itemCount = 0;
+
+  for(let i=0; i < names.length; i++) {
+    const itemName = names[i].value.trim();
+    if(itemName !== "") {
+      let qty = parseInt(qties[i].value) || 0;
+      let price = getNumber(prices[i].value);
+      let total = qty * price;
+      
+      subtotal += total; itemCount += 1;
+
+      const rowDiv = document.createElement('div');
+      rowDiv.className = 'flex justify-between items-start mb-1';
+      
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'flex-grow pr-2';
+      nameSpan.textContent = `${qty}x ${itemName}`;
+      
+      const priceSpan = document.createElement('span');
+      priceSpan.className = 'text-right whitespace-nowrap';
+      priceSpan.textContent = formatNumber(total);
+      
+      rowDiv.appendChild(nameSpan); rowDiv.appendChild(priceSpan);
+      outItems.appendChild(rowDiv);
+    }
+  }
+
+  const total = subtotal;
+  const cashText = document.getElementById('cashInput').value;
+  const cash = getNumber(cashText);
+  
+  document.getElementById('outItemCount').textContent = itemCount;
+  document.getElementById('outTotal').textContent = formatNumber(total);
+  document.getElementById('outCash').textContent = formatNumber(cash);
+  
+  const sisaDOM = document.getElementById('outSisa');
+  if (cashText === "" || cash === 0) {
+     sisaDOM.textContent = formatNumber(0); sisaDOM.classList.remove("text-red-500");
+  } else {
+     const sisa = cash - total;
+     sisaDOM.textContent = formatNumber(sisa);
+     if (sisa < 0) {
+       sisaDOM.classList.add("text-red-500");
+     } else {
+       sisaDOM.classList.remove("text-red-500");
+     }
+  }
+}
+
+function generateList() {
+  document.getElementById('outListTitle').textContent = document.getElementById('listTitleInp').value.toUpperCase();
+  document.getElementById('outListSubtitle').textContent = document.getElementById('listSubtitleInp').value;
+
+  const names = document.getElementsByClassName('list-name');
+  const qty = document.getElementsByClassName('list-qty');
+  const unit = document.getElementsByClassName('list-unit');
+  const checks = document.getElementsByClassName('list-check');
+  
+  const listItems = document.getElementById('listItems');
+  listItems.innerHTML = "";
+  let totalItem = 0;
+
+  for(let i=0; i < names.length; i++) {
+    const itemName = names[i].value.trim();
+    if(itemName !== "") {
+      let q = parseInt(qty[i].value) || 0;
+      let isChecked = checks[i] ? checks[i].checked : false;
+      totalItem += 1;
+
+      const rowDiv = document.createElement('div');
+      rowDiv.className = 'flex justify-between items-center py-1.5 border-b border-transparent transition-colors';
+      
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'flex-grow pr-2 font-medium';
+      nameSpan.textContent = itemName; 
+      // Warna teks sengaja dibiarkan tetap (tidak berubah abu-abu) sesuai permintaan
+      
+      const rightContainer = document.createElement('div');
+      rightContainer.className = 'flex items-center space-x-1 sm:space-x-2 shrink-0';
+
+      const qtyCol = document.createElement('span');
+      qtyCol.className = 'w-5 sm:w-6 text-right inline-block font-bold';
+      qtyCol.textContent = q;
+
+      const unitCol = document.createElement('span');
+      unitCol.className = 'w-10 sm:w-12 text-left inline-block text-slate-500';
+      unitCol.textContent = unit[i].value;
+      
+      // Menggunakan inline-block klasik untuk kotak centang agar html2canvas tidak error / tumpah
+      const checkbox = document.createElement('div');
+      checkbox.className = `w-[16px] h-[16px] border-[1.5px] border-slate-800 rounded-[2px] text-center leading-[13px] text-[12px] font-bold ${isChecked ? 'text-slate-800' : 'text-transparent'}`;
+      checkbox.innerHTML = '&#10004;'; // Karakter Heavy Check Mark
+
+      rightContainer.appendChild(qtyCol); 
+      rightContainer.appendChild(unitCol); 
+      rightContainer.appendChild(checkbox);
+
+      rowDiv.appendChild(nameSpan); 
+      rowDiv.appendChild(rightContainer);
+      listItems.appendChild(rowDiv);
+    }
+  }
+  document.getElementById('listTotal').textContent = totalItem;
+}
+
+// --- DRAFT MANAGEMENT (IndexedDB) ---
+function extractFormData() {
+  const data = {
+    invoiceID: currentInvoiceID,
+    dateStr: document.getElementById('outDate').innerText,
+    receipt: {
+      title: document.getElementById('receiptTitleInp').value,
+      subtitle: document.getElementById('receiptSubtitleInp').value,
+      cash: document.getElementById('cashInput').value,
+      logo: document.getElementById('outLogoReceipt').getAttribute('src') || '',
+      items: []
+    },
+    list: {
+      title: document.getElementById('listTitleInp').value,
+      subtitle: document.getElementById('listSubtitleInp').value,
+      logo: document.getElementById('outLogoList').getAttribute('src') || '',
+      items: []
+    }
+  };
+
+  const rNames = document.getElementsByClassName('inp-name');
+  const rQties = document.getElementsByClassName('inp-qty');
+  const rPrices = document.getElementsByClassName('inp-price');
+  for(let i=0; i < rNames.length; i++) {
+    data.receipt.items.push({ name: rNames[i].value, qty: rQties[i].value, price: rPrices[i].value });
+  }
+
+  const lNames = document.getElementsByClassName('list-name');
+  const lQties = document.getElementsByClassName('list-qty');
+  const lUnits = document.getElementsByClassName('list-unit');
+  const lChecks = document.getElementsByClassName('list-check');
+  for(let i=0; i < lNames.length; i++) {
+    data.list.items.push({ 
+      name: lNames[i].value, 
+      qty: lQties[i].value, 
+      unit: lUnits[i].value,
+      checked: lChecks[i] ? lChecks[i].checked : false
+    });
+  }
+  return data;
+}
+
+async function saveDraftData() { await setItemDB('strukAppDraft', extractFormData()); }
+
+async function loadDraftData() {
+  const savedData = await getItemDB('strukAppDraft');
+  if(savedData) {
+    try { applyDataToForm(savedData); } catch(e) { startNew('both', false); }
+  } else { startNew('both', false); }
+}
+
+function applyDataToForm(data, targetTab = 'both') {
+  currentInvoiceID = data.invoiceID || generateInvoiceID();
+  document.getElementById('outID').innerText = currentInvoiceID;
+  document.getElementById('outDate').innerText = data.dateStr || new Date().toLocaleDateString('id-ID');
+
+  if(targetTab === 'both' || targetTab === 'receipt') {
+    document.getElementById('receiptTitleInp').value = data.receipt.title || '';
+    document.getElementById('receiptSubtitleInp').value = data.receipt.subtitle || '';
+    document.getElementById('cashInput').value = data.receipt.cash || '';
+    
+    if(data.receipt.logo && data.receipt.logo.startsWith('data:image')) {
+      document.getElementById('outLogoReceipt').src = data.receipt.logo;
+      document.getElementById('outLogoReceipt').classList.remove('hidden');
+    } else {
+      document.getElementById('outLogoReceipt').removeAttribute('src');
+      document.getElementById('outLogoReceipt').classList.add('hidden');
+    }
+
+    const rContainer = document.getElementById('items-input-container');
+    rContainer.innerHTML = '';
+    if(data.receipt.items && data.receipt.items.length > 0) {
+      data.receipt.items.forEach(item => addItemRow(item.name, item.qty, item.price));
+    } else { addItemRow(); }
+  }
+
+  if(targetTab === 'both' || targetTab === 'list') {
+    document.getElementById('listTitleInp').value = data.list.title || '';
+    document.getElementById('listSubtitleInp').value = data.list.subtitle || '';
+    
+    if(data.list.logo && data.list.logo.startsWith('data:image')) {
+      document.getElementById('outLogoList').src = data.list.logo;
+      document.getElementById('outLogoList').classList.remove('hidden');
+    } else {
+      document.getElementById('outLogoList').removeAttribute('src');
+      document.getElementById('outLogoList').classList.add('hidden');
+    }
+
+    const lContainer = document.getElementById('list-input-container');
+    lContainer.innerHTML = '';
+    if(data.list.items && data.list.items.length > 0) {
+      data.list.items.forEach(item => addListRow(item.name, item.qty, item.unit, item.checked));
+    } else { addListRow(); }
+  }
+}
+
+function startNew(type, confirmPrompt = true) {
+  if(confirmPrompt && !confirm("Form akan dikosongkan. Lanjutkan?")) return;
+
+  if(type === 'receipt' || type === 'both') {
+    document.getElementById('receiptTitleInp').value = "PEMBELIAN KEPERLUAN";
+    document.getElementById('receiptSubtitleInp').value = "Karang Taruna";
+    document.getElementById('cashInput').value = "";
+    document.getElementById('items-input-container').innerHTML = '';
+    document.getElementById('logoInputReceipt').value = '';
+    document.getElementById('outLogoReceipt').removeAttribute('src');
+    document.getElementById('outLogoReceipt').classList.add('hidden');
+    addItemRow();
+  }
+  
+  if(type === 'list' || type === 'both') {
+    document.getElementById('listTitleInp').value = "DAFTAR BARANG";
+    document.getElementById('listSubtitleInp').value = "Kebutuhan";
+    document.getElementById('list-input-container').innerHTML = '';
+    document.getElementById('logoInputList').value = '';
+    document.getElementById('outLogoList').removeAttribute('src');
+    document.getElementById('outLogoList').classList.add('hidden');
+    addListRow();
+  }
+
+  currentInvoiceID = generateInvoiceID();
+  document.getElementById('outID').innerText = currentInvoiceID;
+  document.getElementById('outDate').innerText = new Date().toLocaleDateString('id-ID');
+  
+  saveDraftData();
+}
+
+async function saveToHistory(type) {
+  const currentData = extractFormData();
+  
+  let histTitle = type === 'receipt' ? (currentData.receipt.title || "Struk Tanpa Judul") : (currentData.list.title || "Daftar Tanpa Judul");
+  let histTotal = type === 'receipt' ? document.getElementById('outTotal').innerText : (document.getElementById('listTotal').innerText + " Item");
+
+  const historyItem = {
+    histId: currentData.invoiceID,
+    type: type,
+    timestamp: new Date().toLocaleString('id-ID'),
+    title: histTitle,
+    totalInfo: histTotal,
+    savedData: currentData
+  };
+
+  const existingIndex = appHistory.findIndex(h => h.histId === currentData.invoiceID);
+  if(existingIndex > -1) { appHistory[existingIndex] = historyItem; } 
+  else { appHistory.unshift(historyItem); }
+  
+  try {
+    await setItemDB('strukAppHistory', appHistory);
+    renderHistory();
+    // Animasi Alert
+    const btn = document.querySelector(type === 'receipt' ? '#receiptPage .btn-save-history' : '#listPage .btn-save-history');
+    const textSpan = document.getElementById(type === 'receipt' ? 'btn-text-receipt' : 'btn-text-list');
+    const originalText = textSpan.innerText;
+    textSpan.innerText = `Berhasil Disimpan!`;
+    btn.classList.add('from-green-500', 'to-emerald-500');
+    setTimeout(() => { 
+      textSpan.innerText = originalText; 
+      btn.classList.remove('from-green-500', 'to-emerald-500');
+    }, 2000);
+  } catch (e) { alert("Error sistem penyimpanan."); console.error(e); }
+}
+
+function renderHistory() {
+  const grid = document.getElementById('historyGrid');
+  grid.innerHTML = "";
+
+  if(appHistory.length === 0) {
+    grid.innerHTML = `<div class="col-span-full text-center py-10 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 font-medium">Belum ada arsip tersimpan. Gunakan tombol 'Simpan ke Arsip' untuk menyimpan pekerjaan.</div>`;
+    return;
+  }
+
+  appHistory.forEach(item => {
+    const isReceipt = item.type === 'receipt';
+    const typeLabel = isReceipt ? '🧾 Struk' : '📋 Daftar';
+    const borderClass = isReceipt ? 'border-indigo-500' : 'border-blue-500';
+
+    const card = document.createElement('div');
+    card.className = `bg-white p-5 rounded-xl border-l-4 ${borderClass} shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between`;
+    card.innerHTML = `
+      <div>
+        <div class="flex justify-between items-start mb-3">
+          <h4 class="font-bold text-slate-800 line-clamp-1 flex-1 pr-2">${item.title}</h4>
+          <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-1 bg-slate-100 text-slate-500 rounded">${typeLabel}</span>
+        </div>
+        <div class="text-xs text-slate-500 space-y-1 mb-4">
+          <p class="flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> ${item.timestamp}</p>
+          <p class="flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg> Ref: <span class="font-mono text-[10px]">${item.histId.substring(0,10)}...</span></p>
+          <p class="flex items-center gap-1.5 mt-2 font-semibold text-slate-700"><svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> ${item.totalInfo}</p>
+        </div>
+      </div>
+      <div class="flex gap-2 border-t border-slate-100 pt-3">
+        <button onclick="loadFromHistory('${item.histId}')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2 rounded transition-colors">📂 Muat & Edit</button>
+        <button onclick="deleteHistory('${item.histId}')" class="bg-red-50 hover:bg-red-500 text-red-500 hover:text-white text-xs font-bold px-3 rounded transition-colors" title="Hapus Permanen">🗑️</button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function loadFromHistory(histId) {
+  const itemToLoad = appHistory.find(h => h.histId === histId);
+  if(!itemToLoad) return;
+  if(confirm("Pekerjaan di layar akan digantikan oleh arsip ini. Lanjutkan?")) {
+    showTab(itemToLoad.type === 'receipt' ? 'receiptPage' : 'listPage');
+    applyDataToForm(itemToLoad.savedData, itemToLoad.type);
+    saveDraftData();
+    window.scrollTo({ top: 0, behavior: 'smooth' }); 
+  }
+}
+
+async function deleteHistory(histId) {
+  if(confirm("Yakin ingin menghapus arsip ini secara permanen?")) {
+    appHistory = appHistory.filter(h => h.histId !== histId);
+    await setItemDB('strukAppHistory', appHistory);
+    renderHistory();
+  }
+}
+
+function exportImage(targetId, filename) {
+  const element = document.getElementById(targetId);
+  html2canvas(element, { scale: 3, backgroundColor: null }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = filename; link.href = canvas.toDataURL("image/png"); link.click();
+  });
+}
+
+setTimeout(() => showTab('receiptPage'), 50);
+</script>
+
+</body>
+</html>
